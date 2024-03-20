@@ -7,12 +7,22 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class ImageProcessingApp(tk.Tk):
+    
     def __init__(self):
         super().__init__()
         self.title("Image Processing App")
 
         self.image_data = None
+        self.original_img = None
         self.segmentation_data = None
+        self.current_slice = 0  # Track current slice for line drawing
+        self.lines = []  # List to store line coordinates
+        
+        # Variables para guardar las coordenadas del dibujo
+        self.start_x = None
+        self.start_y = None
+        self.end_x = None
+        self.end_y = None
 
         self.create_menu()
         self.create_image_display()
@@ -25,6 +35,7 @@ class ImageProcessingApp(tk.Tk):
         # Menú Archivo
         file_menu = tk.Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="Abrir", command=self.open_image)
+        file_menu.add_command(label="Guardar", command=self.save_image)
         file_menu.add_separator()
         file_menu.add_command(label="Reset", command=self.reset_image)
         file_menu.add_command(label="Salir", command=self.quit)
@@ -48,6 +59,80 @@ class ImageProcessingApp(tk.Tk):
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.right_frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        
+        # Bind mouse events for line drawing
+        self.canvas.get_tk_widget().bind("<Button-1>", self.start_drawing)
+        self.canvas.get_tk_widget().bind("<B1-Motion>", self.draw)
+        self.canvas.get_tk_widget().bind("<ButtonRelease-1>", self.stop_drawing)
+        
+    # def save_image(self):
+    #     segmented_image = nib.Nifti1Image(self.image_data, affine=self.original_img.affine)
+    #     nib.save(segmented_image, "segmented_image.nii")
+        
+    def save_image(self):
+        # Ask user for the desired filename
+        filename = tk.filedialog.asksaveasfilename(
+            filetypes=[("NIfTI files", "*.nii"), ("All files", "*.*")],
+            defaultextension=".nii",
+        )
+
+        # Check if filename is valid
+        if filename:
+            # Save the image using the provided filename
+            segmented_image = nib.Nifti1Image(self.image_data, affine=self.original_img.affine)
+            nib.save(segmented_image, filename)
+            print(f"Image saved successfully to {filename}")
+        else:
+            print("No filename provided. Image not saved.")
+    
+    def open_image(self):
+        file_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii"), ("All files", "*.*")])
+        if file_path:
+            self.original_img = nib.load(file_path)
+            self.image_data = self.original_img.get_fdata()
+            self.navigation_scale.config(to=self.image_data.shape[2]-1)
+            self.update_image_display()
+            
+    def update_image_display(self, event=None):
+        if self.image_data is not None:
+            current_slice = int(self.navigation_scale.get())
+            axis = self.navigation_var.get()
+
+            if axis == "X":
+                image_slice = self.image_data[current_slice, :, :]
+            elif axis == "Y":
+                image_slice = self.image_data[:, current_slice, :]
+            else:  # axis == "Z"
+                image_slice = self.image_data[:, :, current_slice]
+
+            self.figure.clear()
+            ax = self.figure.add_subplot(111)
+            
+            ax.imshow(image_slice)
+            
+            self.canvas.draw()
+
+    def start_drawing(self, event):
+        self.start_x = event.x
+        self.start_y = event.y
+        self.lines.append([self.start_x, self.start_y])
+        
+    def stop_drawing(self, event):
+        # self.start_x = None
+        # self.start_y = None
+        self.end_x = event.x
+        self.end_y = event.y
+        print(self.lines)
+        
+        
+    def draw(self, event):
+        if self.start_x and self.start_y:
+            self.end_x = event.x
+            self.end_y = event.y
+            self.lines.append([self.end_x, self.end_y])
+            self.canvas.get_tk_widget().create_line(self.start_x, self.start_y, self.end_x, self.end_y, width=5, fill="red")
+            self.start_x = self.end_x
+            self.start_y = self.end_y
         
     def create_algorithm_form(self):
         self.algorithm_frame = tk.Frame(self)
@@ -98,32 +183,7 @@ class ImageProcessingApp(tk.Tk):
         
         self.navigation_scale = tk.Scale(self.navigation_frame, from_=0, to=100, orient="horizontal", command=self.update_image_display)
         self.navigation_scale.grid(row=0, column=2, padx=5)
-
-    def open_image(self):
-        file_path = filedialog.askopenfilename(filetypes=[("NIfTI files", "*.nii"), ("All files", "*.*")])
-        if file_path:
-            image = nib.load(file_path)
-            self.image_data = image.get_fdata()
-            self.navigation_scale.config(to=self.image_data.shape[2]-1)
-            self.update_image_display()
-            
-    def update_image_display(self, event=None):
-        if self.image_data is not None:
-            current_slice = int(self.navigation_scale.get())
-            axis = self.navigation_var.get()
-
-            if axis == "X":
-                image_slice = self.image_data[current_slice, :, :]
-            elif axis == "Y":
-                image_slice = self.image_data[:, current_slice, :]
-            else:  # axis == "Z"
-                image_slice = self.image_data[:, :, current_slice]
-
-            self.figure.clear()
-            ax = self.figure.add_subplot(111)
-            ax.imshow(image_slice)
-            self.canvas.draw()
-        
+  
     def show_umbralization_form(self):
         self.algorithm_label.config(text="Parámetros de Umbralización:")
         self.algorithm_entry_label_1.config(text="Umbral:")

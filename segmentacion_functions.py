@@ -4,7 +4,7 @@ import nibabel as nib
 
 def threshold(img, umbral):
     img_umbral = img > umbral 
-    return img_umbral
+    return img_umbral.astype(np.uint8)
 
 def isodata(img, umbral, tolerancia):
     while True:
@@ -13,7 +13,7 @@ def isodata(img, umbral, tolerancia):
         img_background = img[img_umbral == 0].mean()
         umbral_new = (img_foreground + img_background)/2
         if abs(umbral_new - umbral) < tolerancia:
-            return img_umbral
+            return img_umbral.astype(np.uint8)
         else:
             umbral = umbral_new
             
@@ -62,7 +62,7 @@ def region_growing3D(img, tol, row, col, dep):
           img_ini, cluster, visited = region_growing2D(img, tol, row, col, next_dep, img_ini, cluster, visited)
           stack_dep.append(next_dep)
     dep = stack_dep.pop(0)
-  return img_ini
+  return img_ini.astype(np.uint8)
 
 def kmeans(img, k, num_iter):
     # Crear los centroides iniciales aleatorios
@@ -83,4 +83,4 @@ def kmeans(img, k, num_iter):
 
     # Calcular la segmentación final
     segmentation = np.argmin(np.abs(np.expand_dims(img, axis=-1) - cluster), axis=-1)
-    return segmentation
+    return segmentation.astype(np.uint8)
