@@ -40,7 +40,7 @@ def region_growing2D(img, tol, row, col, dep, img_bin, cluster, visited):
     row, col, dep = stack.pop(0)
   return img_bin, cluster, visited
 
-def region_growing3D(img, tol, row, col, dep):
+def region_growing3D(img, tol, row, col, dep, iter):
   # Parámetros iniciales.
   profundidad = img.shape[2]
   valor_comparacion = img[row,col,dep]
@@ -54,7 +54,7 @@ def region_growing3D(img, tol, row, col, dep):
   img_ini, cluster, visited = region_growing2D(img, tol, row, col, dep, img_bin, cluster, visited)
 
   # Ciclo que maneja cuántas iteraciones de profundidad se harán.
-  for i in range(5):
+  for i in range(iter):
     for z in [(1),(-1)]:
       next_dep = dep + z
       if 0 <= next_dep < profundidad:

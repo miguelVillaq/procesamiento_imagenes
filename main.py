@@ -66,9 +66,7 @@ class ImageProcessingApp(tk.Tk):
         # Bind mouse events for line drawing
         self.canvas.get_tk_widget().bind("<Button-1>", self.start_drawing)
         self.canvas.get_tk_widget().bind("<B1-Motion>", self.draw)
-        self.canvas.get_tk_widget().bind("<ButtonRelease-1>", self.stop_drawing)
-        
-        
+        self.canvas.get_tk_widget().bind("<ButtonRelease-1>", self.stop_drawing) 
         
     def save_image(self):
         # Ask user for the desired filename
@@ -167,8 +165,14 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_4 = tk.Entry(self.algorithm_frame)
         self.algorithm_entry_4.grid(row=4, column=1, padx=5)
         
+        self.algorithm_entry_label_5 = tk.Label(self.algorithm_frame, text="Parámetro:")
+        self.algorithm_entry_label_5.grid(row=5, column=0, padx=5)
+
+        self.algorithm_entry_5 = tk.Entry(self.algorithm_frame)
+        self.algorithm_entry_5.grid(row=5, column=1, padx=5)
+        
         self.run_algorithm_button = tk.Button(self.algorithm_frame, text="Ejecutar", command=self.run_algorithm)
-        self.run_algorithm_button.grid(row=5, column=0, columnspan=2, pady=5)
+        self.run_algorithm_button.grid(row=6, column=0, columnspan=2, pady=5)
         
     def create_navigation_bar(self):
         self.navigation_frame = tk.Frame(self)
@@ -193,6 +197,7 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_2.config(state='disabled')
         self.algorithm_entry_3.config(state='disabled')
         self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
 
     def show_isodata_form(self):
         self.algorithm_label.config(text="Parámetros de Isodata:")
@@ -202,6 +207,7 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_2.config(state='normal')
         self.algorithm_entry_3.config(state='disabled')
         self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
 
     
     def show_kmeans_form(self):
@@ -212,6 +218,7 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_2.config(state='normal')
         self.algorithm_entry_3.config(state='disabled')
         self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
 
 
     def show_rg_form(self):
@@ -220,10 +227,12 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_label_2.config(text="X:") 
         self.algorithm_entry_label_3.config(text="Y:")   
         self.algorithm_entry_label_4.config(text="Z:")
+        self.algorithm_entry_label_5.config(text="Iteraciones profundidad:")
         self.algorithm_entry_1.config(state='normal')
         self.algorithm_entry_2.config(state='normal')
         self.algorithm_entry_3.config(state='normal')
         self.algorithm_entry_4.config(state='normal')
+        self.algorithm_entry_5.config(state='normal')
 
           
         
@@ -242,8 +251,9 @@ class ImageProcessingApp(tk.Tk):
             x = int(self.algorithm_entry_2.get())
             y = int(self.algorithm_entry_3.get())
             z = int(self.algorithm_entry_4.get())
+            iter = int(self.algorithm_entry_5.get())
             if self.image_data is not None:
-                self.image_data = sf.region_growing3D(self.image_data,tolerancia,x,y,z).astype(np.uint8)
+                self.image_data = sf.region_growing3D(self.image_data,tolerancia,x,y,z, iter).astype(np.uint8)
         elif self.algorithm_label.cget("text") == "Parámetros de K-Means:":
             k = int(self.algorithm_entry_1.get())
             num_iter = int(self.algorithm_entry_2.get())
