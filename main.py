@@ -17,6 +17,9 @@ class ImageProcessingApp(tk.Tk):
         self.segmentation_data = None
         self.current_slice = 0  # Track current slice for line drawing
         self.lines = []  # List to store line coordinates
+        self.image_width = None
+        self.image_height = None
+        self.ax = None
         
         # Variables para guardar las coordenadas del dibujo
         self.start_x = None
@@ -55,7 +58,7 @@ class ImageProcessingApp(tk.Tk):
         self.right_frame = tk.Frame(self)
         self.right_frame.pack(pady=10)
 
-        self.figure = plt.Figure(figsize=(5, 5), dpi=100)
+        self.figure = plt.Figure(figsize=(5,5), dpi=100)
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.right_frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
@@ -65,9 +68,7 @@ class ImageProcessingApp(tk.Tk):
         self.canvas.get_tk_widget().bind("<B1-Motion>", self.draw)
         self.canvas.get_tk_widget().bind("<ButtonRelease-1>", self.stop_drawing)
         
-    # def save_image(self):
-    #     segmented_image = nib.Nifti1Image(self.image_data, affine=self.original_img.affine)
-    #     nib.save(segmented_image, "segmented_image.nii")
+        
         
     def save_image(self):
         # Ask user for the desired filename
@@ -90,7 +91,9 @@ class ImageProcessingApp(tk.Tk):
         if file_path:
             self.original_img = nib.load(file_path)
             self.image_data = self.original_img.get_fdata()
+            
             self.navigation_scale.config(to=self.image_data.shape[2]-1)
+            
             self.update_image_display()
             
     def update_image_display(self, event=None):
@@ -106,10 +109,10 @@ class ImageProcessingApp(tk.Tk):
                 image_slice = self.image_data[:, :, current_slice]
 
             self.figure.clear()
-            ax = self.figure.add_subplot(111)
+            self.ax = self.figure.add_subplot(111)
             
-            ax.imshow(image_slice)
-            
+            self.ax.imshow(image_slice)
+
             self.canvas.draw()
 
     def start_drawing(self, event):
@@ -123,8 +126,7 @@ class ImageProcessingApp(tk.Tk):
         self.end_x = event.x
         self.end_y = event.y
         print(self.lines)
-        
-        
+             
     def draw(self, event):
         if self.start_x and self.start_y:
             self.end_x = event.x
@@ -132,7 +134,7 @@ class ImageProcessingApp(tk.Tk):
             self.lines.append([self.end_x, self.end_y])
             self.canvas.get_tk_widget().create_line(self.start_x, self.start_y, self.end_x, self.end_y, width=5, fill="red")
             self.start_x = self.end_x
-            self.start_y = self.end_y
+            self.start_y = self.end_y         
         
     def create_algorithm_form(self):
         self.algorithm_frame = tk.Frame(self)
