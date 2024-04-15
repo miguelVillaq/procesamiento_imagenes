@@ -1,4 +1,6 @@
 import segmentacion_functions as sf
+import denoising as dn
+import intensity_standarisation as st
 import tkinter as tk
 from tkinter import filedialog
 import nibabel as nib
@@ -51,6 +53,20 @@ class ImageProcessingApp(tk.Tk):
         algorithm_menu.add_command(label="Region growing", command=self.show_rg_form)
         algorithm_menu.add_command(label="K-Means", command=self.show_kmeans_form)
         menu_bar.add_cascade(label="Segmentacion", menu=algorithm_menu)
+        
+        # Menú denoising.
+        algorithm_menu = tk.Menu(menu_bar, tearoff=0)
+        algorithm_menu.add_command(label="Mean denoising", command=self.show_mean_d_form)
+        algorithm_menu.add_command(label="Median denoising", command=self.show_median_d_form)
+        menu_bar.add_cascade(label="Denoising", menu=algorithm_menu)
+        
+        # Menú intensity standarisation.
+        algorithm_menu = tk.Menu(menu_bar, tearoff=0)
+        algorithm_menu.add_command(label="Intensity rescaling", command=self.show_intensity_form)
+        algorithm_menu.add_command(label="Z-score", command=self.show_z_score_form)
+        algorithm_menu.add_command(label="Histogram matching", command=self.show_histogram_form)
+        algorithm_menu.add_command(label="White strip", command=self.show_white_form)
+        menu_bar.add_cascade(label="Intensity standarisation", menu=algorithm_menu)
         
         self.config(menu=menu_bar)
         
@@ -209,7 +225,6 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_4.config(state='disabled')
         self.algorithm_entry_5.config(state='disabled')
 
-    
     def show_kmeans_form(self):
         self.algorithm_label.config(text="Parámetros de K-Means:")
         self.algorithm_entry_label_1.config(text="K:")
@@ -219,7 +234,6 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_3.config(state='disabled')
         self.algorithm_entry_4.config(state='disabled')
         self.algorithm_entry_5.config(state='disabled')
-
 
     def show_rg_form(self):
         self.algorithm_label.config(text="Parámetros de Region growing:")
@@ -234,8 +248,61 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_4.config(state='normal')
         self.algorithm_entry_5.config(state='normal')
 
+    def show_mean_d_form(self):
+        self.algorithm_label.config(text="Parámetros de denoising mean:")
+        self.algorithm_entry_label_1.config(text="Z:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_label_2.config(text="Tolerancia:")
+        self.algorithm_entry_2.config(state='normal')
+        self.algorithm_entry_label_3.config(text="Profundidad:")
+        self.algorithm_entry_3.config(state='normal')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
+    
+    def show_median_d_form(self):
+        self.algorithm_label.config(text="Parámetros de denoising median:")
+        self.algorithm_entry_label_1.config(text="Z:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_label_2.config(text="Tolerancia:")
+        self.algorithm_entry_2.config(state='normal')
+        self.algorithm_entry_label_3.config(text="Profundidad:")
+        self.algorithm_entry_3.config(state='normal')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
           
+    def show_intensity_form(self):
+        self.algorithm_label.config(text="Parámetros de Intensity rescaling:")
+        self.algorithm_entry_1.config(state='disabled')
+        self.algorithm_entry_2.config(state='disabled')
+        self.algorithm_entry_3.config(state='disabled')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
+
+    def show_z_score_form(self):
+        self.algorithm_label.config(text="Parámetros de z-score:")
+        self.algorithm_entry_1.config(state='disabled')
+        self.algorithm_entry_2.config(state='disabled')
+        self.algorithm_entry_3.config(state='disabled')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
+
+    def show_histogram_form(self):
+        self.algorithm_label.config(text="Parámetros de histogram matching:")
+        self.algorithm_entry_label_1.config(text="K percentiles:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_2.config(state='disabled')
+        self.algorithm_entry_3.config(state='disabled')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
         
+    def show_white_form(self):
+        self.algorithm_label.config(text="Parámetros de white strip:")
+        self.algorithm_entry_1.config(state='disabled')
+        self.algorithm_entry_2.config(state='disabled')
+        self.algorithm_entry_3.config(state='disabled')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
+              
     def run_algorithm(self):
         if self.algorithm_label.cget("text") == "Parámetros de Umbralización:":
             umbral = float(self.algorithm_entry_1.get())
@@ -259,6 +326,35 @@ class ImageProcessingApp(tk.Tk):
             num_iter = int(self.algorithm_entry_2.get())
             if self.image_data is not None:
                 self.image_data = sf.kmeans(self.image_data, k, num_iter).astype(np.uint8)
+        elif self.algorithm_label.cget("text") == "Parámetros de denoising mean:":
+            z = int(self.algorithm_entry_1.get())
+            tol = int(self.algorithm_entry_2.get())
+            dep = int(self.algorithm_entry_3.get())
+            func = dn.mean
+            if self.image_data is not None:
+                self.image_data = dn.denoising_img(self.image_data, z, tol, dep, func).astype(np.uint16)
+        elif self.algorithm_label.cget("text") == "Parámetros de denoising median:":
+            z = int(self.algorithm_entry_1.get())
+            tol = int(self.algorithm_entry_2.get())
+            dep = int(self.algorithm_entry_3.get())
+            func = dn.median
+            if self.image_data is not None:
+                self.image_data = dn.denoising_img(self.image_data, z, tol, dep, func).astype(np.uint16)
+        elif self.algorithm_label.cget("text") == "Parámetros de Intensity rescaling:":
+            if self.image_data is not None:
+                self.image_data = st.intensity_rescaling(self.image_data).astype(np.uint16)
+        elif self.algorithm_label.cget("text") == "Parámetros de z-score:":
+            if self.image_data is not None:
+                self.image_data = st.z_score(self.image_data).astype(np.uint16)
+        elif self.algorithm_label.cget("text") == "Parámetros de histogram matching:":
+            k = int(self.algorithm_entry_1.get())
+            trainData = nib.load("img\sub-7002 ses-01 anat sub-7002_ses-01_run-01_T1w.nii")
+            trainData = trainData.get_fdata()
+            if self.image_data is not None:
+                self.image_data = st.n_matching(self.image_data,trainData, k)
+        elif self.algorithm_label.cget("text") == "Parámetros de white strip:":
+            if self.image_data is not None:
+                self.image_data = st.white_stripe(self.image_data).astype(np.uint64)
 
         self.update_image_display()
         
