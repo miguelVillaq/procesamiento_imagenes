@@ -35,6 +35,7 @@ def z_score(img):
 # Intensidad
 # Histograma
 
+# El algoritmo funciona, pero se tarda 5-10 en completarse, adicionalemente requiere 1GB de ram libre, o cercano.
 # Necesita mínimo 3 puntos para funcionar.
 def n_matching(testData,trainData, k):
   #trainData = np.array([[1, 2, 3], [4, 5, 6],[7,8,9]])
