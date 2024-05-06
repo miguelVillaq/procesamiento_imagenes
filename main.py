@@ -90,11 +90,11 @@ class ImageProcessingApp(tk.Tk):
             filetypes=[("NIfTI files", "*.nii"), ("All files", "*.*")],
             defaultextension=".nii",
         )
-
         # Check if filename is valid
         if filename:
             # Save the image using the provided filename
-            segmented_image = nib.Nifti1Image(self.image_data, affine=self.original_img.affine)
+            img = self.image_data.astype(np.float32)
+            segmented_image = nib.Nifti1Image(img, affine=self.original_img.affine)
             nib.save(segmented_image, filename)
             print(f"Image saved successfully to {filename}")
         else:
@@ -320,41 +320,41 @@ class ImageProcessingApp(tk.Tk):
             z = int(self.algorithm_entry_4.get())
             iter = int(self.algorithm_entry_5.get())
             if self.image_data is not None:
-                self.image_data = sf.region_growing3D(self.image_data,tolerancia,x,y,z, iter).astype(np.uint8)
+                self.image_data = sf.region_growing3D(self.image_data,tolerancia,x,y,z, iter)
         elif self.algorithm_label.cget("text") == "Parámetros de K-Means:":
             k = int(self.algorithm_entry_1.get())
             num_iter = int(self.algorithm_entry_2.get())
             if self.image_data is not None:
-                self.image_data = sf.kmeans(self.image_data, k, num_iter).astype(np.uint8)
+                self.image_data = sf.kmeans(self.image_data, k, num_iter)
         elif self.algorithm_label.cget("text") == "Parámetros de denoising mean:":
             z = int(self.algorithm_entry_1.get())
             tol = int(self.algorithm_entry_2.get())
             dep = int(self.algorithm_entry_3.get())
             func = dn.mean
             if self.image_data is not None:
-                self.image_data = dn.denoising_img(self.image_data, z, tol, dep, func).astype(np.uint16)
+                self.image_data = dn.denoising_img(self.image_data, z, tol, dep, func)
         elif self.algorithm_label.cget("text") == "Parámetros de denoising median:":
             z = int(self.algorithm_entry_1.get())
             tol = int(self.algorithm_entry_2.get())
             dep = int(self.algorithm_entry_3.get())
             func = dn.median
             if self.image_data is not None:
-                self.image_data = dn.denoising_img(self.image_data, z, tol, dep, func).astype(np.uint16)
+                self.image_data = dn.denoising_img(self.image_data, z, tol, dep, func)
         elif self.algorithm_label.cget("text") == "Parámetros de Intensity rescaling:":
             if self.image_data is not None:
-                self.image_data = st.intensity_rescaling(self.image_data).astype(np.uint16)
+                self.image_data = st.intensity_rescaling(self.image_data)
         elif self.algorithm_label.cget("text") == "Parámetros de z-score:":
             if self.image_data is not None:
-                self.image_data = st.z_score(self.image_data).astype(np.uint16)
+                self.image_data = st.z_score(self.image_data)
         elif self.algorithm_label.cget("text") == "Parámetros de histogram matching:":
             k = int(self.algorithm_entry_1.get())
-            trainData = nib.load("img\sub-7002 ses-01 anat sub-7002_ses-01_run-01_T1w.nii")
+            trainData = nib.load("img\mni152.nii")
             trainData = trainData.get_fdata()
             if self.image_data is not None:
                 self.image_data = st.n_matching(self.image_data,trainData, k)
         elif self.algorithm_label.cget("text") == "Parámetros de white strip:":
             if self.image_data is not None:
-                self.image_data = st.white_stripe(self.image_data).astype(np.uint64)
+                self.image_data = st.white_stripe(self.image_data)
 
         self.update_image_display()
         
