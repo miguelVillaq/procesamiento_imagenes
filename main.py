@@ -122,13 +122,16 @@ class ImageProcessingApp(tk.Tk):
         if self.image_data is not None:
             current_slice = int(self.navigation_scale.get())
             axis = self.navigation_var.get()
-
-            if axis == "X":
-                image_slice = self.image_data[current_slice, :, :]
-            elif axis == "Y":
-                image_slice = self.image_data[:, current_slice, :]
-            else:  # axis == "Z"
-                image_slice = self.image_data[:, :, current_slice]
+            if(len(self.image_data.shape) > 2):
+                
+                if axis == "X":
+                    image_slice = self.image_data[current_slice, :, :]
+                elif axis == "Y":
+                    image_slice = self.image_data[:, current_slice, :]
+                else:  # axis == "Z"
+                    image_slice = self.image_data[:, :, current_slice]
+            else:
+                image_slice = self.image_data
 
             self.figure.clear()
             self.ax = self.figure.add_subplot(111)
