@@ -1,6 +1,7 @@
 import segmentacion_functions as sf
 import denoising as dn
 import intensity_standarisation as st
+import border as br
 import tkinter as tk
 from tkinter import filedialog
 import nibabel as nib
@@ -67,6 +68,13 @@ class ImageProcessingApp(tk.Tk):
         algorithm_menu.add_command(label="Histogram matching", command=self.show_histogram_form)
         algorithm_menu.add_command(label="White strip", command=self.show_white_form)
         menu_bar.add_cascade(label="Intensity standarisation", menu=algorithm_menu)
+        
+        # Menú border detection.
+        algorithm_menu = tk.Menu(menu_bar, tearoff=0)
+        algorithm_menu.add_command(label="First derivative", command=self.show_first_derivative)
+        algorithm_menu.add_command(label="Second derivative", command=self.show_second_derivative)
+        algorithm_menu.add_command(label="Difference filter", command=self.show_difference_filter)
+        menu_bar.add_cascade(label="Border detection", menu=algorithm_menu)
         
         self.config(menu=menu_bar)
         
@@ -302,6 +310,39 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_3.config(state='disabled')
         self.algorithm_entry_4.config(state='disabled')
         self.algorithm_entry_5.config(state='disabled')
+    
+    def show_second_derivative(self):
+        self.algorithm_label.config(text="Parámetros de second derivative:")
+        self.algorithm_entry_label_1.config(text="Slide:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_label_2.config(text="Eje:")
+        self.algorithm_entry_2.config(state='normal')
+        self.algorithm_entry_label_3.config(text="Umbral:")
+        self.algorithm_entry_3.config(state='normal')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
+        
+    def show_difference_filter(self):
+        self.algorithm_label.config(text="Parámetros de difference filter:")
+        self.algorithm_entry_label_1.config(text="Slide:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_label_2.config(text="Eje:")
+        self.algorithm_entry_2.config(state='normal')
+        self.algorithm_entry_label_3.config(text="Umbral:")
+        self.algorithm_entry_3.config(state='normal')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
+        
+    def show_first_derivative(self):
+        self.algorithm_label.config(text="Parámetros de first derivative:")
+        self.algorithm_entry_label_1.config(text="Slide:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_label_2.config(text="Eje:")
+        self.algorithm_entry_2.config(state='normal')
+        self.algorithm_entry_label_3.config(text="Umbral:")
+        self.algorithm_entry_3.config(state='normal')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
               
     def run_algorithm(self):
         if self.algorithm_label.cget("text") == "Parámetros de Umbralización:":
@@ -355,6 +396,24 @@ class ImageProcessingApp(tk.Tk):
         elif self.algorithm_label.cget("text") == "Parámetros de white strip:":
             if self.image_data is not None:
                 self.image_data = st.white_stripe(self.image_data)
+        elif self.algorithm_label.cget("text") == "Parámetros de second derivative:":
+            slide = int(self.algorithm_entry_1.get())
+            eje = str(self.algorithm_entry_2.get())
+            umbral = int(self.algorithm_entry_3.get())
+            if self.image_data is not None:
+                self.image_data = br.derivada_segundo_orden(self.image_data, slide,eje,umbral)
+        elif self.algorithm_label.cget("text") == "Parámetros de difference filter:":
+            slide = int(self.algorithm_entry_1.get())
+            eje = str(self.algorithm_entry_2.get())
+            umbral = int(self.algorithm_entry_3.get())
+            if self.image_data is not None:
+                self.image_data = br.dif_filtro(self.image_data, slide,eje,umbral)
+        elif self.algorithm_label.cget("text") == "Parámetros de first derivative:":
+            slide = int(self.algorithm_entry_1.get())
+            eje = str(self.algorithm_entry_2.get())
+            umbral = int(self.algorithm_entry_3.get())
+            if self.image_data is not None:
+                self.image_data = br.derivada_primer_orden(self.image_data, slide,eje,umbral)
 
         self.update_image_display()
         
