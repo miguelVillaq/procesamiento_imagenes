@@ -362,8 +362,10 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_2.config(state='normal')
         self.algorithm_entry_label_3.config(text="Reps_opt:")
         self.algorithm_entry_3.config(state='normal')
-        self.algorithm_entry_4.config(state='disabled')
-        self.algorithm_entry_5.config(state='disabled')
+        self.algorithm_entry_label_4.config(text="Name_fixed_img:")
+        self.algorithm_entry_4.config(state='normal')
+        self.algorithm_entry_label_5.config(text="Name_mov_img:")
+        self.algorithm_entry_5.config(state='normal')
               
     def run_algorithm(self):
         if self.algorithm_label.cget("text") == "Parámetros de Umbralización:":
@@ -439,8 +441,8 @@ class ImageProcessingApp(tk.Tk):
             steps = float(self.algorithm_entry_1.get())
             tol = float(self.algorithm_entry_2.get())
             reps = int(self.algorithm_entry_3.get())
-            fixed = 'img\sub-01_T1w.nii'
-            mov = 'img\mni152.nii'
+            fixed = f"img\{str(self.algorithm_entry_4.get())}.nii"
+            mov = f"img\{str(self.algorithm_entry_5.get())}.nii"
             if self.image_data is not None:
                 self.image_data, registration_img = rt.registration(fixed, mov, steps, tol, reps)
                 sitk.WriteImage(registration_img, "img\imagen_registrada.nii")
