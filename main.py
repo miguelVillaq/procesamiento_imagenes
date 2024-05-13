@@ -7,7 +7,10 @@ from tkinter import filedialog
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
+import registration as rt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import SimpleITK as sitk
+import os
 
 class ImageProcessingApp(tk.Tk):
     
@@ -75,6 +78,10 @@ class ImageProcessingApp(tk.Tk):
         algorithm_menu.add_command(label="Second derivative", command=self.show_second_derivative)
         algorithm_menu.add_command(label="Difference filter", command=self.show_difference_filter)
         menu_bar.add_cascade(label="Border detection", menu=algorithm_menu)
+        
+        algorithm_menu = tk.Menu(menu_bar, tearoff=0)
+        algorithm_menu.add_command(label="Registration", command=self.show_registration)
+        menu_bar.add_cascade(label="Registration", menu=algorithm_menu)
         
         self.config(menu=menu_bar)
         
@@ -346,6 +353,17 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_entry_3.config(state='normal')
         self.algorithm_entry_4.config(state='disabled')
         self.algorithm_entry_5.config(state='disabled')
+        
+    def show_registration(self):
+        self.algorithm_label.config(text="Parámetros de registration:")
+        self.algorithm_entry_label_1.config(text="Steps_opt:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_label_2.config(text="Tol_opt:")
+        self.algorithm_entry_2.config(state='normal')
+        self.algorithm_entry_label_3.config(text="Reps_opt:")
+        self.algorithm_entry_3.config(state='normal')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
               
     def run_algorithm(self):
         if self.algorithm_label.cget("text") == "Parámetros de Umbralización:":
@@ -417,6 +435,15 @@ class ImageProcessingApp(tk.Tk):
             umbral = int(self.algorithm_entry_3.get())
             if self.image_data is not None:
                 self.image_data = br.derivada_primer_orden(self.image_data, slide,eje,umbral)
+        elif self.algorithm_label.cget("text") == "Parámetros de registration:":
+            steps = float(self.algorithm_entry_1.get())
+            tol = float(self.algorithm_entry_2.get())
+            reps = int(self.algorithm_entry_3.get())
+            fixed = 'img\sub-01_T1w.nii'
+            mov = 'img\mni152.nii'
+            if self.image_data is not None:
+                self.image_data, registration_img = rt.registration(fixed, mov, steps, tol, reps)
+                sitk.WriteImage(registration_img, "img\imagen_registrada.nii")
 
         self.update_image_display()
         
