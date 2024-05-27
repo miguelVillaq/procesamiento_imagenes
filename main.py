@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import registration as rt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import SimpleITK as sitk
-import os
+import laplacian 
 
 class ImageProcessingApp(tk.Tk):
     
@@ -22,10 +22,12 @@ class ImageProcessingApp(tk.Tk):
         self.original_img = None
         self.segmentation_data = None
         self.current_slice = 0  # Track current slice for line drawing
-        self.lines = []  # List to store line coordinates
+        self.lines_red = []  # List to store line coordinates
+        self.lines_green = []  # List to store line coordinates
         self.image_width = None
         self.image_height = None
         self.ax = None
+        self.img_slice = None
         
         # Variables para guardar las coordenadas del dibujo
         self.start_x = None
@@ -56,6 +58,7 @@ class ImageProcessingApp(tk.Tk):
         algorithm_menu.add_command(label="Isodata", command=self.show_isodata_form)
         algorithm_menu.add_command(label="Region growing", command=self.show_rg_form)
         algorithm_menu.add_command(label="K-Means", command=self.show_kmeans_form)
+        algorithm_menu.add_command(label="Proyecto", command=self.show_proyecto_form)
         menu_bar.add_cascade(label="Segmentacion", menu=algorithm_menu)
         
         # Menú denoising.
@@ -87,17 +90,20 @@ class ImageProcessingApp(tk.Tk):
         
     def create_image_display(self):
         self.right_frame = tk.Frame(self)
-        self.right_frame.pack(pady=10)
+        self.right_frame.pack()
 
-        self.figure = plt.Figure(figsize=(5,5), dpi=100)
+        self.figure = plt.Figure(figsize=(4,4), dpi=100)
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.right_frame)
-        self.canvas.draw()
+        self.canvas.draw
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         
         # Bind mouse events for line drawing
         self.canvas.get_tk_widget().bind("<Button-1>", self.start_drawing)
-        self.canvas.get_tk_widget().bind("<B1-Motion>", self.draw)
-        self.canvas.get_tk_widget().bind("<ButtonRelease-1>", self.stop_drawing) 
+        self.canvas.get_tk_widget().bind("<Button-3>", self.start_drawing)
+        self.canvas.get_tk_widget().bind("<B1-Motion>", self.draw_red)
+        self.canvas.get_tk_widget().bind("<B3-Motion>", self.draw_green)
+        self.canvas.get_tk_widget().bind("<ButtonRelease-1>", self.stop_drawing)
+        self.canvas.get_tk_widget().bind("<ButtonRelease-3>", self.stop_drawing) 
         
     def save_image(self):
         # Ask user for the desired filename
@@ -142,31 +148,90 @@ class ImageProcessingApp(tk.Tk):
 
             self.figure.clear()
             self.ax = self.figure.add_subplot(111)
-            
+            self.img_slice = image_slice
             self.ax.imshow(image_slice)
-
+            
+            #self.solapar_coordenadas()
+            
             self.canvas.draw()
+
+    def solapar_coordenadas(self):
+            fig = self.figure
+            ax = self.ax
+
+            # Obtener la posición del subplot
+            position = ax.get_position()
+            fig_size = fig.get_size_inches()
+
+            # Obtener la posición relativa del subplot (entre 0 y 1)
+            x0 = position.x0
+            y0 = position.y0
+
+            # Obtener el ancho y alto de la figura en pulgadas
+            fig_width = fig_size[0]
+            fig_height = fig_size[1]
+
+            # Obtener la densidad de puntos por pulgada (dpi) de la pantalla
+            dpi = fig.get_dpi()
+
+            # Calcular el ancho y alto del subplot en píxeles
+            width_pixels = fig_width * dpi * (position.x1 - position.x0)
+            height_pixels = fig_height * dpi * (position.y1 - position.y0)
+            
+            # Alto y ancho de la figura en píxeles.
+            width_pixels_f = fig_width * dpi 
+            height_pixels_f = fig_height * dpi 
+            
+            dif_x = round(width_pixels_f - width_pixels)
+            dif_y = round(height_pixels_f - height_pixels)
+            x0_img = int(dif_x/2) + 5
+            x1_img = int(width_pixels + x0_img)
+            y0_img = int(dif_y/2) + 2
+            y1_img = int(height_pixels + y0_img)
+            
+            factor_conversion = self.img_slice.shape[0] / height_pixels
+            
+            def aux(lista):
+                lista[0] = int((lista[0] - x0_img) * factor_conversion)
+                lista[1] = int((lista[1] - y0_img) * factor_conversion)
+                return lista
+            
+            self.lines_red = np.array(list(map(aux, self.lines_red)))
+            self.lines_green = np.array(list(map(aux, self.lines_green)))
+
+            #print(factor_conversion)
+            # print(f"Dimensiones del subplot en píxeles:")
+            # print(f"X0 {x0_img} , Y0 {y0_img}, X1 {x1_img} , y1 {y1_img}")
+            # print(f"Ancho: {width_pixels:.2f} píxeles")
+            # print(f"Alto: {height_pixels:.2f} píxeles")
+            # print(f"AnchoF: {width_pixels_f:.2f} píxeles")
+            # print(f"AltoF: {height_pixels_f:.2f} píxeles")
+            
 
     def start_drawing(self, event):
         self.start_x = event.x
         self.start_y = event.y
-        self.lines.append([self.start_x, self.start_y])
         
     def stop_drawing(self, event):
-        # self.start_x = None
-        # self.start_y = None
         self.end_x = event.x
         self.end_y = event.y
-        print(self.lines)
+        #print(f"ANTES Red: {self.lines_red} \n Green: {self.lines_green}")
+        #self.solapar_coordenadas()
+        #print(f"DESPUÉS Red: {self.lines_red} \n Green: {self.lines_green}")
              
-    def draw(self, event):
+    def draw_red(self, event):
         if self.start_x and self.start_y:
             self.end_x = event.x
             self.end_y = event.y
-            self.lines.append([self.end_x, self.end_y])
-            self.canvas.get_tk_widget().create_line(self.start_x, self.start_y, self.end_x, self.end_y, width=5, fill="red")
-            self.start_x = self.end_x
-            self.start_y = self.end_y         
+            self.lines_red.append([self.end_x, self.end_y])
+            self.canvas.get_tk_widget().create_line(self.start_x, self.start_y, self.end_x, self.end_y, width=5, fill="red", tags="red")      
+
+    def draw_green(self, event):
+        if self.start_x and self.start_y:
+            self.end_x = event.x
+            self.end_y = event.y
+            self.lines_green.append([self.end_x, self.end_y])
+            self.canvas.get_tk_widget().create_line(self.start_x, self.start_y, self.end_x, self.end_y, width=5, fill="green",tags="green")
         
     def create_algorithm_form(self):
         self.algorithm_frame = tk.Frame(self)
@@ -358,14 +423,23 @@ class ImageProcessingApp(tk.Tk):
         self.algorithm_label.config(text="Parámetros de registration:")
         self.algorithm_entry_label_1.config(text="Steps_opt:")
         self.algorithm_entry_1.config(state='normal')
-        self.algorithm_entry_label_2.config(text="Tol_opt:")
+        self.algorithm_entry_label_2.config(text="Tolerance_opt:")
         self.algorithm_entry_2.config(state='normal')
-        self.algorithm_entry_label_3.config(text="Reps_opt:")
+        self.algorithm_entry_label_3.config(text="Repetitions_opt:")
         self.algorithm_entry_3.config(state='normal')
         self.algorithm_entry_label_4.config(text="Name_fixed_img:")
         self.algorithm_entry_4.config(state='normal')
         self.algorithm_entry_label_5.config(text="Name_mov_img:")
         self.algorithm_entry_5.config(state='normal')
+        
+    def show_proyecto_form(self):
+        self.algorithm_label.config(text="Parámetros de proyecto:")
+        self.algorithm_entry_label_1.config(text="Beta:")
+        self.algorithm_entry_1.config(state='normal')
+        self.algorithm_entry_2.config(state='disabled')
+        self.algorithm_entry_3.config(state='disabled')
+        self.algorithm_entry_4.config(state='disabled')
+        self.algorithm_entry_5.config(state='disabled')
               
     def run_algorithm(self):
         if self.algorithm_label.cget("text") == "Parámetros de Umbralización:":
@@ -446,13 +520,35 @@ class ImageProcessingApp(tk.Tk):
             if self.image_data is not None:
                 self.image_data, registration_img = rt.registration(fixed, mov, steps, tol, reps)
                 sitk.WriteImage(registration_img, "img\imagen_registrada.nii")
+        elif self.algorithm_label.cget("text") == "Parámetros de proyecto:":
+            if self.image_data is not None:
+                #print(f"ANTES Red: {self.lines_red} \n Green: {self.lines_green}")
+                self.solapar_coordenadas()
+                #print(f"DESPUÉS Red: {self.lines_red} \n Green: {self.lines_green}")
+                beta = float(self.algorithm_entry_1.get())
+                self.image_data = laplacian.ejecutar(self.img_slice, beta, self.lines_red, self.lines_green)
+                self.canvas.get_tk_widget().delete("red")
+                self.canvas.get_tk_widget().delete("green")
+                #self.image_data = prueba_laplacian.ejecutar(self.img_slice, beta, self.lines_red, self.lines_green)
+                #print(self.img_slice.shape)
 
         self.update_image_display()
-        
+    
+    def reset_values(self):
+        self.start_x = None
+        self.start_y = None
+        self.end_x = None
+        self.end_y = None
+        self.lines_red = []  
+        self.lines_green = []  
+    
     def reset_image(self):
             self.image_data = None
             self.figure.clear()
-            self.canvas.draw() 
+            self.canvas.get_tk_widget().delete("red")
+            self.canvas.get_tk_widget().delete("green")
+            self.reset_values()
+            self.canvas.draw()
             self.open_image()
             
 app = ImageProcessingApp()
