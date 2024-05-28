@@ -4,14 +4,16 @@ from scipy.sparse import lil_matrix, find, diags, csr_matrix
 import scipy.sparse.linalg as spla
 import math
 
-# Matriz de adyacencia/pesos -> Ecuación #1.
+# Matriz de adyacencia/pesos -> Ecuación #1 y 3.2.
 def calcular_peso(Int_i, Int_j, beta, sigma):
     peso = ((beta * np.power(np.abs(Int_i - Int_j), 2))/sigma) * -1
     return np.exp(peso)
 
 def grafo_pesos(img, beta):
     # 4 vecinos.
-    vecinos = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    #vecinos = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    # 8 vecinos.
+    vecinos = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1,1), (1,1), (1,-1), (-1,-1)]
     # dimensiones
     alto, ancho = img.shape
     # Cantidad voxeles.
@@ -81,18 +83,21 @@ def solv_sistema_lineal(sum_pesos, m_ady, img, back, foreg):
     
     return x[0]
 
+# Ecuación 3.
 def etiquetado_final(img,sol_x, back, foreg):
     new_img = np.zeros_like(img)
     
     vlr_back = np.mean(img[back[:, 0], back[:, 1]])
     vlr_foreg = np.mean(img[foreg[:, 0], foreg[:, 1]])
     
-    prom = (np.sum(vlr_back) + np.sum(vlr_foreg)) / 2
+    prom = (vlr_back + vlr_foreg) / 2
     
     for i, xi in enumerate(sol_x):
         coordenada = np.unravel_index(i,img.shape)
-        if xi > prom:
-            new_img[coordenada] = 1
+        if xi >= prom:
+            new_img[coordenada] = 1 
+        else:
+            new_img[coordenada] = 0 
             
     return new_img
 
