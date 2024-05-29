@@ -76,7 +76,7 @@ def solv_sistema_lineal(sum_pesos, m_ady, img, back, foreg):
     Ex = Is_diag + np.power(L,2)
     
     # Halla valores de x.
-    min_sparse = csr_matrix(x)
+    min_sparse = csr_matrix(Ex)
     x = spla.cg(min_sparse,b_flat)
     
     return x[0]
