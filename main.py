@@ -529,8 +529,6 @@ class ImageProcessingApp(tk.Tk):
                 self.image_data = laplacian.ejecutar(self.img_slice, beta, self.lines_red, self.lines_green)
                 self.canvas.get_tk_widget().delete("red")
                 self.canvas.get_tk_widget().delete("green")
-                #self.image_data = prueba_laplacian.ejecutar(self.img_slice, beta, self.lines_red, self.lines_green)
-                #print(self.img_slice.shape)
 
         self.update_image_display()
     

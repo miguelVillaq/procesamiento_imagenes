@@ -10,8 +10,6 @@ def calcular_peso(Int_i, Int_j, beta, sigma):
     return np.exp(peso)
 
 def grafo_pesos(img, beta):
-    # 4 vecinos.
-    #vecinos = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     # 8 vecinos.
     vecinos = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1,1), (1,1), (1,-1), (-1,-1)]
     # dimensiones
@@ -75,10 +73,10 @@ def solv_sistema_lineal(sum_pesos, m_ady, img, back, foreg):
     Is_flat = Is.flatten()
     
     Is_diag = diags(Is_flat)
-    minimizar = Is_diag + (L ** 2)
+    Ex = Is_diag + np.power(L,2)
     
     # Halla valores de x.
-    min_sparse = csr_matrix(minimizar)
+    min_sparse = csr_matrix(x)
     x = spla.cg(min_sparse,b_flat)
     
     return x[0]
