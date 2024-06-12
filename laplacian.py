@@ -9,6 +9,31 @@ def calcular_peso(Int_i, Int_j, beta, sigma):
     peso = ((beta * np.power(np.abs(Int_i - Int_j), 2))/sigma) * -1
     return np.exp(peso)
 
+def calculo_sigma(imagen):
+    diff_array = []
+    for i in range(imagen.shape[0]):
+        for j in range(imagen.shape[1]):
+        # Obtener el valor del pixel actual
+            current_pixel = imagen[i, j]
+
+            # Calcular las diferencias con los vecinos
+            # Arriba
+            if i > 0:
+                diff_array.append(np.abs(current_pixel - imagen[i - 1, j]))
+
+            # Abajo
+            if i < imagen.shape[0] - 1:
+                diff_array.append(np.abs(current_pixel - imagen[i + 1, j]))
+
+            # Izquierda
+            if j > 0:
+                diff_array.append(np.abs(current_pixel - imagen[i, j - 1]))
+
+            # Derecha
+            if j < imagen.shape[1] - 1:
+                diff_array.append(np.abs(current_pixel - imagen[i, j + 1]))
+    return np.max(diff_array)
+    
 def grafo_pesos(img, beta):
     # 8 vecinos.
     vecinos = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1,1), (1,1), (1,-1), (-1,-1)]
@@ -17,7 +42,7 @@ def grafo_pesos(img, beta):
     # Cantidad voxeles.
     vox = alto*ancho
     m_adyacencia = lil_matrix((vox,vox))
-    
+    sigma = calculo_sigma(img)
     # Recorriendo la img.
     for i in range(alto):
         for j in range(ancho):
@@ -32,7 +57,7 @@ def grafo_pesos(img, beta):
                     # Índice líneal vecino.
                     i_vecino = new_i * ancho + new_j
                     
-                    sigma = np.max(np.abs(img[i,j] - img[new_i,new_j])) + np.power(10.0,-6)
+                    
                     # Peso arista.
                     peso = calcular_peso(img[i,j], img[new_i,new_j], beta, sigma)
                     peso = np.power(10.0,-6) if peso == 0 else peso
@@ -57,7 +82,6 @@ def solv_sistema_lineal(sum_pesos, m_ady, img, back, foreg):
     sum_pesos_flat = sum_pesos.flatten()
     
     L = diags(sum_pesos_flat) - m_ady
-    L += np.power(10.0,-6) * diags(np.ones(len(sum_pesos_flat))) 
     
     Is = np.zeros_like(img)
     b = np.zeros_like(img)
